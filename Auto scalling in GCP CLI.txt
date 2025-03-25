@@ -1,0 +1,25 @@
+Auto scalling in GCP CLI
+
+gcloud compute instance-templates create auto-scale-template \
+    --machine-type=e2-medium \
+    --image-project=ubuntu-os-cloud \
+    --image-family=ubuntu-2204-lts \
+    --boot-disk-size=20GB \
+    --region=asia-south2 \
+    --tags=http-server \
+    --metadata=startup-script="#!/bin/bash
+    sudo apt update -y && sudo apt install -y stress
+    echo 'Instance ready for auto-scaling'"
+
+gcloud compute instance-groups managed create auto-scale-group \
+    --base-instance-name=auto-scale-instance \
+    --size=1 \
+    --template=auto-scale-template \
+    --zone=asia-south2-c
+
+gcloud compute instance-groups managed set-autoscaling auto-scale-group \
+    --max-num-replicas=3 \
+    --min-num-replicas=1 \
+    --target-cpu-utilization=0.75 \
+    --cool-down-period=60 \
+    --zone=asia-south2-c
